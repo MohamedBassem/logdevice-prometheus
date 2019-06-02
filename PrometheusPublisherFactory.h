@@ -1,6 +1,6 @@
 #include <logdevice/common/plugin/StatsPublisherFactory.h>
-#include <logdevice/common/settings/UpdateableSettings.h>
 #include <logdevice/common/settings/Settings.h>
+#include <logdevice/common/settings/UpdateableSettings.h>
 
 #include "PrometheusStatsPublisher.h"
 
@@ -14,11 +14,6 @@ class PrometheusStatsPublisherFactory : public StatsPublisherFactory {
     return PluginType::STATS_PUBLISHER_FACTORY;
   }
 
-  /**
-   * If this returns non-null, the client/server will also create a
-   * StatsPublishingThread, periodically collect them and push to the
-   * StatsPublisher object.
-   */
   std::unique_ptr<StatsPublisher> operator()(UpdateableSettings<Settings>,
                                              int num_db_shards) override {
     return std::make_unique<PrometheusStatsPublisher>();
