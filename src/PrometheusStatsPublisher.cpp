@@ -27,6 +27,10 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
   // val = totalPerTrafficClassStats().bytes_sent. (The per-traffic-class
   // method will be called too, for each traffic class.)
   void stat(const std::string& name, int64_t val) override {
+    if (name.find(".") != std::string::npos) {
+      // TODO replace the dots with other character
+      return;
+    }
     static const std::map<std::string, std::string> client_map{
         {"source", "client"}};
     static const std::map<std::string, std::string> server_map{
@@ -34,6 +38,7 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
 
     auto& family = publisher_->getFamily(name);
     auto& counter = family.Add(is_server_ ? server_map : client_map);
+    counter.Set(val);
   }
   // Per-message-type stats.
   void stat(const std::string& name, MessageType, int64_t val) override {}
@@ -84,6 +89,8 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
 
 PrometheusStatsPublisher::PrometheusStatsPublisher()
     : registry_(std::make_shared<prometheus::Registry>()) {
+  // TODO figure out a way to make the port work in dev clusters
+  // TODO make the port configurable
   int port = 3000 + (folly::Random::rand32() % 50);
   exposer_ = std::make_unique<prometheus::Exposer>(
       folly::sformat("127.0.0.1:{}", port));
@@ -106,7 +113,9 @@ void PrometheusStatsPublisher::addRollupEntity(std::string entity) {}
 Family<Gauge>& PrometheusStatsPublisher::getFamily(const std::string& name) {
   auto it = famililes_.find(name);
   if (it == famililes_.end()) {
-    auto& fam = prometheus::BuildGauge().Name(name).Register(*registry_);
+    auto& fam =
+        prometheus::BuildGauge().Name(name).Help("").Labels({}).Register(
+            *registry_);
     auto new_f = famililes_.emplace(name, fam);
     it = new_f.first;
   }
