@@ -23,8 +23,8 @@ class PrometheusStatsPublisher : public StatsPublisher {
   prometheus::Family<prometheus::Gauge>& getFamily(const std::string& name);
 
  private:
-  prometheus::Exposer exposer_;
-  std::unique_ptr<prometheus::Registry> registry_;
+  std::unique_ptr<prometheus::Exposer> exposer_;
+  std::shared_ptr<prometheus::Registry> registry_;
   std::unordered_map<std::string, prometheus::Family<prometheus::Gauge>&>
       famililes_;
 };

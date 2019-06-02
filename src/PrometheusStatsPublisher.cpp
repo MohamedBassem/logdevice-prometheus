@@ -1,3 +1,6 @@
+#include <folly/Format.h>
+#include <folly/Random.h>
+#include <logdevice/common/debug.h>
 #include <logdevice/common/stats/Stats.h>
 
 #include "PrometheusStatsPublisher.h"
@@ -80,8 +83,13 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
 } // namespace
 
 PrometheusStatsPublisher::PrometheusStatsPublisher()
-    : exposer_("http://127.0.0.1:2134"),
-      registry_(std::make_unique<prometheus::Registry>()) {}
+    : registry_(std::make_shared<prometheus::Registry>()) {
+  int port = 3000 + (folly::Random::rand32() % 50);
+  exposer_ = std::make_unique<prometheus::Exposer>(
+      folly::sformat("127.0.0.1:{}", port));
+  exposer_->RegisterCollectable(registry_);
+  ld_info("Listening on port %d", port);
+}
 
 void PrometheusStatsPublisher::publish(
     const std::vector<const Stats*>& current,
