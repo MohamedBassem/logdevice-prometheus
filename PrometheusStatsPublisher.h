@@ -1,11 +1,17 @@
-#pragma once
+#include <unordered_map>
 
 #include <logdevice/common/StatsPublisher.h>
+#include <prometheus/exposer.h>
+#include <prometheus/family.h>
+#include <prometheus/gauge.h>
+#include <prometheus/registry.h>
 
 namespace facebook { namespace logdevice {
 
 class PrometheusStatsPublisher : public StatsPublisher {
  public:
+  PrometheusStatsPublisher();
+
   virtual ~PrometheusStatsPublisher() = default;
 
   void publish(const std::vector<const Stats*>& current,
@@ -14,7 +20,13 @@ class PrometheusStatsPublisher : public StatsPublisher {
 
   void addRollupEntity(std::string entity) override;
 
+  prometheus::Family<prometheus::Gauge>& getFamily(const std::string& name);
+
  private:
+  prometheus::Exposer exposer_;
+  std::unique_ptr<prometheus::Registry> registry_;
+  std::unordered_map<std::string, prometheus::Family<prometheus::Gauge>&>
+      famililes_;
 };
 
 }} // namespace facebook::logdevice
