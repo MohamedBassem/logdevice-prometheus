@@ -29,8 +29,3 @@ class PrometheusStatsPublisherFactory : public StatsPublisherFactory {
 };
 
 }} // namespace facebook::logdevice
-
-extern "C" __attribute__((__used__)) facebook::logdevice::Plugin*
-logdevice_plugin() {
-  return new facebook::logdevice::PrometheusStatsPublisherFactory();
-}

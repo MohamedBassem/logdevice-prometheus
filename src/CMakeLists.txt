@@ -4,6 +4,7 @@ add_library(ldprometheus
     SHARED
     PrometheusPublisherFactory
     PrometheusStatsPublisher
+    main
 )
 
 target_include_directories(
