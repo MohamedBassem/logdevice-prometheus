@@ -6,6 +6,7 @@ ExternalProject_Add(logdevice
     PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
     SOURCE_SUBDIR "logdevice"
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/external/logdevice"
+    CMAKE_ARGS -DBUILD_TESTS=OFF
     INSTALL_COMMAND make install DESTDIR=${PLUGIN_STAGING_DIR}
     )
 
