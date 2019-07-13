@@ -7,6 +7,8 @@ add_library(ldprometheus
     main
 )
 
+add_dependencies(ldprometheus logdevice prometheus)
+
 target_include_directories(
     ldprometheus
     PUBLIC
