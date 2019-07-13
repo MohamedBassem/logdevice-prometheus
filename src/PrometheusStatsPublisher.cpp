@@ -137,15 +137,12 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
 };
 } // namespace
 
-PrometheusStatsPublisher::PrometheusStatsPublisher()
+PrometheusStatsPublisher::PrometheusStatsPublisher(const std::string& listen_addr)
     : registry_(std::make_shared<prometheus::Registry>()) {
   // TODO figure out a way to make the port work in dev clusters
-  // TODO make the port configurable
-  int port = 3000 + (folly::Random::rand32() % 50);
-  exposer_ = std::make_unique<prometheus::Exposer>(
-      folly::sformat("127.0.0.1:{}", port));
+  exposer_ = std::make_unique<prometheus::Exposer>(listen_addr);
   exposer_->RegisterCollectable(registry_);
-  ld_info("Listening on port %d", port);
+  ld_info("Listening on addr %s", listen_addr.c_str());
 }
 
 void PrometheusStatsPublisher::publish(

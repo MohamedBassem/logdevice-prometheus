@@ -10,7 +10,7 @@ namespace facebook { namespace logdevice {
 
 class PrometheusStatsPublisher : public StatsPublisher {
  public:
-  PrometheusStatsPublisher();
+  PrometheusStatsPublisher(const std::string& listen_addr);
 
   virtual ~PrometheusStatsPublisher() = default;
 
