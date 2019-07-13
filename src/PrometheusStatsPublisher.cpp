@@ -1,15 +1,19 @@
+#include "PrometheusStatsPublisher.h"
+
 #include <folly/Format.h>
 #include <folly/Random.h>
+#include <logdevice/common/PriorityMap.h>
+#include <logdevice/common/configuration/NodeLocation.h>
+#include <logdevice/common/configuration/TrafficClass.h>
 #include <logdevice/common/debug.h>
+#include <logdevice/common/protocol/MessageTypeNames.h>
+#include <logdevice/common/stats/Histogram.h>
 #include <logdevice/common/stats/Stats.h>
-
-#include "PrometheusStatsPublisher.h"
 
 using prometheus::Family;
 using prometheus::Gauge;
 
 namespace facebook { namespace logdevice {
-
 namespace {
 
 using namespace facebook::logdevice;
@@ -21,65 +25,111 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
       : publisher_(publisher), is_server_(is_server) {}
 
   virtual ~PrometheusEnumerationCallback() {}
-  // Simple stats. Also called for per-something stats aggregated for all
-  // values of something. E.g. if there's a per-traffic-class stat
-  // 'bytes_sent', this method will be called with name = 'bytes_sent' and
-  // val = totalPerTrafficClassStats().bytes_sent. (The per-traffic-class
-  // method will be called too, for each traffic class.)
-  void stat(const std::string& name, int64_t val) override {
+
+  void updateCounter(const std::string& name,
+                     std::map<std::string, std::string> labels,
+                     double val) {
     if (name.find(".") != std::string::npos) {
       // TODO replace the dots with other character
       return;
     }
-    static const std::map<std::string, std::string> client_map{
-        {"source", "client"}};
-    static const std::map<std::string, std::string> server_map{
-        {"source", "server"}};
-
-    auto& family = publisher_->getFamily(name);
-    auto& counter = family.Add(is_server_ ? server_map : client_map);
+    auto& family = publisher_->getFamily(name, is_server_);
+    auto& counter = family.Add(std::move(labels));
     counter.Set(val);
   }
+
+  // Simple stats.
+  void stat(const std::string& name, int64_t val) override {
+    updateCounter(name, {}, val);
+  }
   // Per-message-type stats.
-  void stat(const std::string& name, MessageType, int64_t val) override {}
+  void stat(const std::string& name,
+            MessageType message_type,
+            int64_t val) override {
+    updateCounter(
+        name, {{"message_type", messageTypeNames()[message_type]}}, val);
+  }
   // Per-shard stats.
   void stat(const std::string& name,
             shard_index_t shard,
-            int64_t val) override {}
+            int64_t val) override {
+    updateCounter(name, {{"shared_index", std::to_string(shard)}}, val);
+  }
   // Per-traffic-class stats.
-  void stat(const std::string& name, TrafficClass, int64_t val) override {}
+  void stat(const std::string& name, TrafficClass tc, int64_t val) override {
+    updateCounter(name, {{"traffic_class", trafficClasses()[tc]}}, val);
+  }
   // Per-flow-group stats.
   void stat(const std::string& name,
             NodeLocationScope flow_group,
-            int64_t val) override {}
+            int64_t val) override {
+    // Not needed as it's included in the per-flow-group per message one.
+  }
   // Per-flow-group-and-msg-priority stats.
   void stat(const std::string& name,
             NodeLocationScope flow_group,
-            Priority,
-            int64_t val) override {}
+            Priority priority,
+            int64_t val) override {
+    updateCounter(name,
+                  {{"flow_group", NodeLocation::scopeNames()[flow_group]},
+                   {"priority", PriorityMap::toName()[priority]}},
+                  val);
+  }
   // Per-msg-priority stats (totals of the previous one).
-  void stat(const std::string& name, Priority, int64_t val) override {}
+  void stat(const std::string& name, Priority, int64_t val) override {
+    // Not needed as it's included in the per-flow-group per message one.
+  }
   // Per-request-type stats.
-  void stat(const std::string& name, RequestType, int64_t val) override {}
+  void stat(const std::string& name, RequestType type, int64_t val) override {
+    updateCounter(name, {{"request_type", requestTypeNames[type]}}, val);
+  }
   // Per-storage-task-type stats.
   void stat(const std::string& name,
             StorageTaskType type,
-            int64_t val) override {}
+            int64_t val) override {
+    updateCounter(name, {{"storage_task_type", toString(type)}}, val);
+  }
   // Per-worker stats (only for workers of type GENERAL).
   void stat(const std::string& name,
             worker_id_t worker_id,
-            uint64_t load) override {}
+            uint64_t val) override {
+    updateCounter(name, {{"worker_id", std::to_string(worker_id.val())}}, val);
+  }
   // Per-log stats.
   void stat(const char* name,
             const std::string& log_group,
-            int64_t val) override {}
+            int64_t val) override {
+    updateCounter(name, {{"log_group", log_group}}, val);
+  }
   // Simple histograms.
   void histogram(const std::string& name,
-                 const HistogramInterface& hist) override {}
+                 const HistogramInterface& hist) override {
+    updateCounter(name, {{"percentile", "50"}}, hist.estimatePercentile(0.5));
+    updateCounter(name, {{"percentile", "90"}}, hist.estimatePercentile(0.9));
+    updateCounter(name, {{"percentile", "99"}}, hist.estimatePercentile(0.99));
+    updateCounter(name, {{"percentile", "max"}}, hist.estimatePercentile(1));
+  }
   // Per-shard histograms.
   void histogram(const std::string& name,
                  shard_index_t shard,
-                 const HistogramInterface& hist) override {}
+                 const HistogramInterface& hist) override {
+    updateCounter(
+        name,
+        {{"shard_index", std::to_string(shard)}, {"percentile", "50"}},
+        hist.estimatePercentile(0.5));
+    updateCounter(
+        name,
+        {{"shard_index", std::to_string(shard)}, {"percentile", "90"}},
+        hist.estimatePercentile(0.9));
+    updateCounter(
+        name,
+        {{"shard_index", std::to_string(shard)}, {"percentile", "99"}},
+        hist.estimatePercentile(0.99));
+    updateCounter(
+        name,
+        {{"shard_index", std::to_string(shard)}, {"percentile", "max"}},
+        hist.estimatePercentile(1));
+  }
 
  private:
   PrometheusStatsPublisher* publisher_;
@@ -110,12 +160,20 @@ void PrometheusStatsPublisher::publish(
 
 void PrometheusStatsPublisher::addRollupEntity(std::string entity) {}
 
-Family<Gauge>& PrometheusStatsPublisher::getFamily(const std::string& name) {
+Family<Gauge>& PrometheusStatsPublisher::getFamily(const std::string& name,
+                                                   bool is_server) {
+  static const std::map<std::string, std::string> client_map{
+      {"source", "client"}};
+  static const std::map<std::string, std::string> server_map{
+      {"source", "server"}};
+
   auto it = famililes_.find(name);
   if (it == famililes_.end()) {
-    auto& fam =
-        prometheus::BuildGauge().Name(name).Help("").Labels({}).Register(
-            *registry_);
+    auto& fam = prometheus::BuildGauge()
+                    .Name(name)
+                    .Help("")
+                    .Labels(is_server ? server_map : client_map)
+                    .Register(*registry_);
     auto new_f = famililes_.emplace(name, fam);
     it = new_f.first;
   }
