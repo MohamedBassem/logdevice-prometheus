@@ -9,6 +9,7 @@
 #include <logdevice/common/protocol/MessageTypeNames.h>
 #include <logdevice/common/stats/Histogram.h>
 #include <logdevice/common/stats/Stats.h>
+#include <prometheus/check_names.h>
 
 using prometheus::Family;
 using prometheus::Gauge;
@@ -29,8 +30,9 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
   void updateCounter(const std::string& name,
                      std::map<std::string, std::string> labels,
                      double val) {
-    if (name.find(".") != std::string::npos) {
-      // TODO replace the dots with other character
+    if (!prometheus::CheckMetricName(name)) {
+      // TODO replace the dots with other character.
+      // TODO figure out what's wrong with the failing stats.
       return;
     }
     auto& family = publisher_->getFamily(name, is_server_);
