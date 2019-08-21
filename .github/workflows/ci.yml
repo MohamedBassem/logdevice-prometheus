@@ -1,4 +1,4 @@
-name: C++ CI
+name: LogdDevice Proemetheus Plugin CI
 
 on: [push]
 
