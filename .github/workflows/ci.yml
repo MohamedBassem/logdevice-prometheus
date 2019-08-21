@@ -1,6 +1,6 @@
-name: LogdDevice Proemetheus Plugin CI
+name: CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
