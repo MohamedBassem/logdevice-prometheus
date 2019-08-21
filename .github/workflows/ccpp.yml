@@ -12,6 +12,6 @@ jobs:
     - name: prepare
       run: mkdir -p _build && cd _build
     - name: cmake
-      run: cmake ..
+      run: cd _build && cmake ..
     - name: make
-      run: make -j $(nproc)
+      run: cd _build && make -j $(nproc)
