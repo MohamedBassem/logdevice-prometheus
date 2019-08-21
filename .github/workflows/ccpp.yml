@@ -9,6 +9,11 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - name: install-deps
+      run: |
+        apt-get update
+        apt-get install -y curl
+        apt-get install -y ca-certificates doxygen $(curl https://raw.githubusercontent.com/facebookincubator/LogDevice/master/logdevice/build_tools/ubuntu.deps)
     - name: prepare
       run: mkdir -p _build && cd _build
     - name: cmake
