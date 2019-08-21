@@ -9,10 +9,9 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    - name: install-deps
+    - name: install-logdevice-deps
       run: |
-        sudo apt-get install -y curl
-        sudo apt-get install -y ca-certificates doxygen $(curl https://raw.githubusercontent.com/facebookincubator/LogDevice/master/logdevice/build_tools/ubuntu.deps)
+        sudo apt-get install -y $(curl https://raw.githubusercontent.com/facebookincubator/LogDevice/master/logdevice/build_tools/ubuntu.deps)
     - name: prepare
       run: mkdir -p _build && cd _build
     - name: cmake
