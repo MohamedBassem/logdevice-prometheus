@@ -1,0 +1,20 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install-logdevice-deps
+      run: |
+        sudo apt-get update && sudo apt-get install python3-setuptools curl libcurl4-openssl-dev && sudo apt-get install -y $(curl https://raw.githubusercontent.com/facebookincubator/LogDevice/master/logdevice/build_tools/ubuntu.deps)
+    - name: prepare
+      run: mkdir -p _build && cd _build
+    - name: cmake
+      run: cd _build && cmake ..
+    - name: make
+      run: cd _build && sudo make -j $(nproc)
