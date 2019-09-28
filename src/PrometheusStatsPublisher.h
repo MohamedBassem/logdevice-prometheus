@@ -20,7 +20,7 @@ class PrometheusStatsPublisher : public StatsPublisher {
 
   void addRollupEntity(std::string entity) override;
 
-  prometheus::Family<prometheus::Gauge>& getFamily(const std::string& name, bool is_server);
+  prometheus::Family<prometheus::Gauge>& getFamily(const std::string& name, const std::string& stats_name);
 
  private:
   std::unique_ptr<prometheus::Exposer> exposer_;
