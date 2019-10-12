@@ -19,11 +19,7 @@ set(LOGDEVICE_INCLUDE_DIR
   ${BINARY_DIR}/staging/usr/local/include
 )
 
-set(LOGDEVICE_SHARED_LIBS
-  ${BINARY_DIR}/lib/liblogdevice.so)
-
 message(STATUS "Logdevice Includes: ${LOGDEVICE_INCLUDE_DIR}")
-message(STATUS "Logdevice Shared Libs: ${LOGDEVICE_SHARED_LIBS}")
 
 mark_as_advanced(
     LOGDEVICE_INCLUDE_DIR
