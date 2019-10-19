@@ -31,3 +31,21 @@ target_link_libraries(
     ${PROMETHEUS_LIBRARIES}
     "-Wl,--no-whole-archive"
 )
+
+
+# Building the tests
+enable_testing()
+include(GoogleTest OPTIONAL RESULT_VARIABLE HAVE_CMAKE_GTEST)
+add_executable(prometheus_tests tests/PublisherTest.cpp)
+add_dependencies(prometheus_tests ldprometheus)
+target_include_directories(
+  prometheus_tests
+  PUBLIC
+    ${GTEST_INCLUDE_DIRS})
+target_link_libraries(
+  prometheus_tests
+  ldprometheus
+  ${GTEST_LIBRARY}
+  ${PROMETHEUS_LIBRARIES}
+  Threads::Threads)
+add_test(NAME prometheus_tests COMMAND prometheus_tests)
