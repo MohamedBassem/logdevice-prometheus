@@ -147,6 +147,10 @@ PrometheusStatsPublisher::PrometheusStatsPublisher(const std::string& listen_add
   ld_info("Listening on addr %s", listen_addr.c_str());
 }
 
+
+PrometheusStatsPublisher::PrometheusStatsPublisher(std::shared_ptr<prometheus::Registry> registry)
+    : registry_(std::move(registry)) {}
+
 void PrometheusStatsPublisher::publish(
     const std::vector<const Stats*>& current,
     const std::vector<const Stats*>& previous,

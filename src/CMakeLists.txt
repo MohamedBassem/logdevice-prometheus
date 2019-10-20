@@ -47,5 +47,6 @@ target_link_libraries(
   ldprometheus
   ${GTEST_LIBRARY}
   ${PROMETHEUS_LIBRARIES}
+  ${LOGDEVICE_LIBS}
   Threads::Threads)
 add_test(NAME prometheus_tests COMMAND prometheus_tests)

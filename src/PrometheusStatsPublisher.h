@@ -12,6 +12,9 @@ class PrometheusStatsPublisher : public StatsPublisher {
  public:
   PrometheusStatsPublisher(const std::string& listen_addr);
 
+  // Used for tests
+  PrometheusStatsPublisher(std::shared_ptr<prometheus::Registry> registry);
+
   virtual ~PrometheusStatsPublisher() = default;
 
   void publish(const std::vector<const Stats*>& current,

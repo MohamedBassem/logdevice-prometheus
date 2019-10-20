@@ -19,6 +19,10 @@ set(LOGDEVICE_INCLUDE_DIR
   ${BINARY_DIR}/staging/usr/local/include
 )
 
+set(LOGDEVICE_LIBS
+  ${PLUGIN_STAGING_DIR}/usr/local/lib/liblogdevice.so
+)
+
 message(STATUS "Logdevice Includes: ${LOGDEVICE_INCLUDE_DIR}")
 
 mark_as_advanced(
