@@ -54,6 +54,11 @@ TEST(PublisherTest, testBasicMetrics) {
   StatsHolder holder(params);
 
   STAT_INCR(&holder, post_request_total);
+  MESSAGE_TYPE_STAT_INCR(&holder, MessageType::HELLO, message_sent);
+  TRAFFIC_CLASS_STAT_INCR((&holder), TrafficClass::READ_TAIL, messages_sent);
+  PER_SHARD_STAT_INCR(&holder, shard_dirty, shard_index_t{5});
+  REQUEST_TYPE_STAT_INCR(&holder, RequestType::APPEND, post_request);
+
   auto stats = holder.aggregate();
 
   publisher.publish(
@@ -63,13 +68,50 @@ TEST(PublisherTest, testBasicMetrics) {
 
   auto metrics = registry->Collect();
 
-  auto family = findFamily(metrics, "post_request_total");
-  ASSERT_NE(nullptr, family);
+  {
+    // Basic
+    auto family = findFamily(metrics, "post_request_total");
+    ASSERT_NE(nullptr, family);
+    auto metric = findMetric(*family, {{"source", "server"}});
+    ASSERT_NE(nullptr, metric);
+    EXPECT_EQ(1, metric->gauge.value);
+  }
 
-  auto metric = findMetric(*family, {{"source", "server"}});
-  ASSERT_NE(nullptr, metric);
+  {
+    // Per message
+    auto family = findFamily(metrics, "message_sent");
+    ASSERT_NE(nullptr, family);
+    auto metric = findMetric(*family, {{"source", "server"}, {"message_type", "HELLO"}});
+    ASSERT_NE(nullptr, metric);
+    EXPECT_EQ(1, metric->gauge.value);
+  }
 
-  EXPECT_EQ(1, metric->gauge.value);
+  {
+    // Per traffic class
+    auto family = findFamily(metrics, "messages_sent");
+    ASSERT_NE(nullptr, family);
+    auto metric = findMetric(*family, {{"source", "server"}, {"traffic_class", "READ_TAIL"}});
+    ASSERT_NE(nullptr, metric);
+    EXPECT_EQ(1, metric->gauge.value);
+  }
+
+  {
+    // Per shard
+    auto family = findFamily(metrics, "shard_dirty");
+    ASSERT_NE(nullptr, family);
+    auto metric = findMetric(*family, {{"source", "server"}, {"shard_index", "5"}});
+    ASSERT_NE(nullptr, metric);
+    EXPECT_EQ(1, metric->gauge.value);
+  }
+
+  {
+    // Per request
+    auto family = findFamily(metrics, "post_request");
+    ASSERT_NE(nullptr, family);
+    auto metric = findMetric(*family, {{"source", "server"}, {"request_type", "APPEND"}});
+    ASSERT_NE(nullptr, metric);
+    EXPECT_EQ(1, metric->gauge.value);
+  }
 }
 
 }}

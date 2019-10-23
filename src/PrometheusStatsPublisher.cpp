@@ -55,7 +55,7 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
   void stat(const std::string& name,
             shard_index_t shard,
             int64_t val) override {
-    updateCounter(name, {{"shared_index", std::to_string(shard)}}, val);
+    updateCounter(name, {{"shard_index", std::to_string(shard)}}, val);
   }
   // Per-traffic-class stats.
   void stat(const std::string& name, TrafficClass tc, int64_t val) override {
