@@ -18,3 +18,5 @@ jobs:
       run: cd _build && cmake ..
     - name: make
       run: cd _build && sudo make -j $(nproc)
+    - name: test
+      run: cd _build && sudo make test

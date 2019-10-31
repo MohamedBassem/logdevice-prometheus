@@ -29,4 +29,6 @@ include(build-prometheus-cpp)
 include(build-gtest)
 include(build-logdevice)
 
+enable_testing()
+
 add_subdirectory(src)
