@@ -23,6 +23,20 @@ set(LOGDEVICE_LIBS
   ${PLUGIN_STAGING_DIR}/usr/local/lib/liblogdevice.so
 )
 
+add_custom_command(TARGET logdevice POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${BINARY_DIR}/staging/usr/local/lib/ ${PLUGIN_STAGING_DIR}/usr/local/lib/
+)
+
+set(LOGDEVICE_DEPS
+  ${PLUGIN_STAGING_DIR}/usr/local/lib/libprotocol.so
+  ${PLUGIN_STAGING_DIR}/usr/local/lib/libthriftcpp2.so
+  ${PLUGIN_STAGING_DIR}/usr/local/lib/libtransport.so
+  ${PLUGIN_STAGING_DIR}/usr/local/lib/libthrift-core.so
+  ${PLUGIN_STAGING_DIR}/usr/local/lib/libthriftprotocol.so
+  ${PLUGIN_STAGING_DIR}/usr/local/lib/libfolly.so
+)
+
+
 message(STATUS "Logdevice Includes: ${LOGDEVICE_INCLUDE_DIR}")
 
 mark_as_advanced(

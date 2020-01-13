@@ -47,6 +47,7 @@ target_link_libraries(
   ldprometheus
   ${GTEST_LIBRARY}
   ${PROMETHEUS_LIBRARIES}
+  ${LOGDEVICE_DEPS}
   ${LOGDEVICE_LIBS}
   glog
   Threads::Threads)
