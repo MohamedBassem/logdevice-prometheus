@@ -81,6 +81,12 @@ class PrometheusEnumerationCallback : public Stats::EnumerationCallbacks {
   void stat(const std::string& name, Priority, int64_t val) override {
     // Not needed as it's included in the per-flow-group per message one.
   }
+  // Per-monitoring-tier stats
+  void stat(const std::string& name,
+	    MonitoringTier monitoring_tier,
+	    int64_t val) override {
+    updateCounter(name, {{"monitoring_tier", toString(monitoring_tier)}}, val);
+  }
   // Per-request-type stats.
   void stat(const std::string& name, RequestType type, int64_t val) override {
     updateCounter(name, {{"request_type", requestTypeNames[type]}}, val);
